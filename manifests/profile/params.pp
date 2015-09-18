@@ -91,6 +91,9 @@
 #   the repo by yourself.
 #   Optional. Defaults to true
 #
+# [*cluster*] Which cluster to use.
+#   Optional. Default is ceph.
+#
 class ceph::profile::params (
   # puppet 2.7 compatibiliy hack. TODO: change to undef once 2.7 is deprecated
   $fsid = '4b5c8c0a-ff60-454b-a1b4-9747aa737d19',
@@ -110,6 +113,7 @@ class ceph::profile::params (
   $client_keys = {},
   $osds = undef,
   $manage_repo = true,
+  $cluster = 'ceph'
 ) {
   validate_hash($client_keys)
 

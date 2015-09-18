@@ -42,5 +42,6 @@ class ceph::profile::base {
     mon_host                  => $ceph::profile::params::mon_host,
     cluster_network           => $ceph::profile::params::cluster_network,
     public_network            => $ceph::profile::params::public_network,
+    cluster                   => $ceph::profile::params::cluster,
   }
 }

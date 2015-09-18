@@ -21,11 +21,13 @@ Puppet::Type.type(:ceph_config).provide(
 ) do
 
   def section
-    resource[:name].split('/', 2).first
+    item = resource[:name].split(' ', 2).last
+    item.split('/', 2).first
   end
 
   def setting
-    resource[:name].split('/', 2).last
+    item = resource[:name].split(' ', 2).last
+    item.split('/', 2).last
   end
 
   def separator

@@ -92,6 +92,9 @@
 # [*public_network*] The address of the public network.
 #   Optional. {public-network-ip/netmask}
 #
+# [*cluster*] Which cluster to use.
+#   Optional. Default is ceph.
+#
 class ceph (
   $fsid,
   $ensure                     = present,
@@ -113,6 +116,7 @@ class ceph (
   $sign_messages              = undef,
   $cluster_network            = undef,
   $public_network             = undef,
+  $cluster                    ='ceph'
 ) {
   include ::ceph::params
 
@@ -122,44 +126,49 @@ class ceph (
   }
 
   if $ensure !~ /(absent|purged)/ {
+    $defaults = { 'path' => "/etc/ceph/${cluster}.conf" }
+
     # Make sure ceph is installed before managing the configuration
     Package<| tag == 'ceph' |> -> Ceph_Config<| |>
     # [global]
-    ceph_config {
-      'global/fsid':                        value => $fsid;
-      'global/keyring':                     value => $keyring;
-      'global/osd_pool_default_pg_num':     value => $osd_pool_default_pg_num;
-      'global/osd_pool_default_pgp_num':    value => $osd_pool_default_pgp_num;
-      'global/osd_pool_default_size':       value => $osd_pool_default_size;
-      'global/osd_pool_default_min_size':   value => $osd_pool_default_min_size;
-      'global/osd_pool_default_crush_rule': value => $osd_pool_default_crush_rule;
-      'global/mon_osd_full_ratio':          value => $mon_osd_full_ratio;
-      'global/mon_osd_nearfull_ratio':      value => $mon_osd_nearfull_ratio;
-      'global/mon_initial_members':         value => $mon_initial_members;
-      'global/mon_host':                    value => $mon_host;
-      'global/require_signatures':          value => $require_signatures;
-      'global/cluster_require_signatures':  value => $cluster_require_signatures;
-      'global/service_require_signatures':  value => $service_require_signatures;
-      'global/sign_messages':               value => $sign_messages;
-      'global/cluster_network':             value => $cluster_network;
-      'global/public_network':              value => $public_network;
-      'osd/osd_journal_size':               value => $osd_journal_size;
+    $ceph_global_config = {
+      'global/fsid'                         => $fsid, 
+      'global/keyring'                      => $keyring, 
+      'global/osd_pool_default_pg_num'      => $osd_pool_default_pg_num, 
+      'global/osd_pool_default_pgp_num'     => $osd_pool_default_pgp_num, 
+      'global/osd_pool_default_size'        => $osd_pool_default_size,
+      'global/osd_pool_default_min_size'    => $osd_pool_default_min_size,
+      'global/osd_pool_default_crush_rule'  => $osd_pool_default_crush_rule,
+      'global/mon_osd_full_ratio'           => $mon_osd_full_ratio,
+      'global/mon_osd_nearfull_ratio'       => $mon_osd_nearfull_ratio,
+      'global/mon_initial_members'          => $mon_initial_members,
+      'global/mon_host'                     => $mon_host,
+      'global/require_signatures'           => $require_signatures,
+      'global/cluster_require_signatures'   => $cluster_require_signatures,
+      'global/service_require_signatures'   => $service_require_signatures,
+      'global/sign_messages'                => $sign_messages,
+      'global/cluster_network'              => $cluster_network,
+      'global/public_network'               => $public_network,
+      'osd/osd_journal_size'                => $osd_journal_size,
     }
+    create_ceph_config($ceph_global_config, $defaults)
 
     if $authentication_type == 'cephx' {
-      ceph_config {
-        'global/auth_cluster_required': value => 'cephx';
-        'global/auth_service_required': value => 'cephx';
-        'global/auth_client_required':  value => 'cephx';
-        'global/auth_supported':        value => 'cephx';
+      $ceph_auth_config = {
+        'global/auth_cluster_required'  => 'cephx',
+        'global/auth_service_required'  => 'cephx',
+        'global/auth_client_required'   => 'cephx',
+        'global/auth_supported'         => 'cephx',
       }
+      create_ceph_config($ceph_auth_config, $defaults)
     } else {
-      ceph_config {
-        'global/auth_cluster_required': value => 'none';
-        'global/auth_service_required': value => 'none';
-        'global/auth_client_required':  value => 'none';
-        'global/auth_supported':        value => 'none';
+      $ceph_auth_config = {
+        'global/auth_cluster_required'  => 'none',
+        'global/auth_service_required'  => 'none',
+        'global/auth_client_required'   => 'none',
+        'global/auth_supported'         => 'none',
       }
+      create_ceph_config($ceph_auth_config, $defaults)
     }
   }
 }
